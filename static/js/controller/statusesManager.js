@@ -1,9 +1,9 @@
-import {dataHandler} from "../data/dataHandler.js";
-import {htmlFactory, htmlTemplates} from "../view/htmlFactory.js";
-import {domManager} from "../view/domManager.js";
-import {cardsManager} from "./cardsManager.js";
-import {showMessage} from "../view/utils.js";
-import {dragManager} from './dragHandler.js'
+import { dataHandler } from "../data/dataHandler.js";
+import { htmlFactory, htmlTemplates } from "../view/htmlFactory.js";
+import { domManager } from "../view/domManager.js";
+import { cardsManager } from "./cardsManager.js";
+import { showMessage } from "../view/utils.js";
+import { dragManager } from "./dragHandler.js";
 
 export let statusesManager = {
     loadStatuses: async function (boardId) {
@@ -83,11 +83,14 @@ const addStatusToDB = async (statusObject, newStatusTitle, boardId) => {
     }
     statusObject.renderedInput.toggleAttribute("disabled");
     statusObject.renderedInput.addEventListener("change", updateHandler);
-    statusObject.renderedStatus.querySelector('.button-delete').addEventListener('click',deleteHandler);
-    dragManager.handleNewElement(statusObject.renderedStatus,"statusDrag" );
-    dragManager.handleNewElement(statusObject.renderedCardContainer,"statusDrop" );
-
-
+    statusObject.renderedStatus
+        .querySelector(".button-delete")
+        .addEventListener("click", deleteHandler);
+    dragManager.handleNewElement(statusObject.renderedStatus, "statusDrag");
+    dragManager.handleNewElement(
+        statusObject.renderedCardContainer,
+        "statusDrop"
+    );
 };
 
 const createTemporaryStatus = async (boardId, title, lastElem) => {
@@ -106,8 +109,12 @@ const createTemporaryStatus = async (boardId, title, lastElem) => {
         renderedStatus: document.querySelector(
             `div[data-status-id=${temporaryStatusID}]`
         ),
-        renderedCardContainer: document.querySelector(`div[data-status-id=${temporaryStatusID}].card-droppable`),
-        renderdDeleteButton: document.querySelector(`button[data-status-id=${temporaryStatusID}].button-delete`)
+        renderedCardContainer: document.querySelector(
+            `div[data-status-id=${temporaryStatusID}].card-droppable`
+        ),
+        renderdDeleteButton: document.querySelector(
+            `button[data-status-id=${temporaryStatusID}].button-delete`
+        ),
     };
     statusObject.renderedInput.toggleAttribute("disabled");
     return statusObject;
@@ -121,17 +128,9 @@ function showHideButtonHandler(clickEvent) {
 function updateHandler() {
     let statusId = parseInt(this.dataset.statusId);
     let boardId = parseInt(this.dataset.boardId);
-    if (statusId <= 4) {
-        statusesManager.postStatus({
-            title: this.value,
-            boardId: boardId,
-            statusId: statusId,
-        });
-    } else {
-        dataHandler.updateStatus(boardId, statusId, {
-            title: this.value,
-        });
-    }
+    dataHandler.updateStatus(boardId, statusId, {
+        title: this.value,
+    });
 }
 
 async function deleteHandler() {

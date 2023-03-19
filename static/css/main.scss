@@ -392,6 +392,15 @@ a.navbar-brand {
     }
 }
 
+.modal {
+    backdrop-filter: blur(2px);
+}
+
+.modal-content {
+    background-color: #{$off-white};
+    border: 1px solid #{$brown};
+}
+
 .status-draggable,
 .card-draggable {
     cursor: move;

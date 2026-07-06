@@ -1,0 +1,17 @@
+# Editors and IDEs
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Python virtual environments
+venv/
+.venv/
+env/
+
+# Environment variables / Secrets
+.env
+
+# Python cache and temporary files
+__pycache__/
+*.py[cod]

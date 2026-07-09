@@ -9,9 +9,12 @@ from flask import Flask, flash, render_template, url_for, request, redirect
 from flask import session, abort
 from flask.typing import ResponseReturnValue
 import dotenv
+import os
 
 from util import json_response
 import data_handler.main_handler as dh
+
+dotenv.load_dotenv()
 
 UPLOAD_FOLDER: str = 'static\\uploads'
 
@@ -19,7 +22,8 @@ mimetypes.add_type('application/javascript', '.js')
 app: Flask = Flask(__name__, static_url_path='/static')
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['MAX_CONTENT_LENGTH'] = 1 * 1000 * 1000
-app.secret_key = b'B!qKM7y!;;N7qie5'
+
+app.secret_key = os.environ.get('FLASK_SECRET_KEY')
 
 
 @app.route("/", \
@@ -531,7 +535,6 @@ def get_user(user_id: int) -> ResponseReturnValue | None:
 def main() -> None:
     """Starts flask server listening on localhost:5000
     """
-    dotenv.load_dotenv()
 
     app.run(debug=True, host='0.0.0.0', port=5000)
 

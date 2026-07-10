@@ -2,9 +2,7 @@
 
     Queries regarding boards.
 """
-import sys
 from typing import Any
-from functools import reduce
 import data_manager
 import data_handler.main_handler as dh
 
@@ -42,7 +40,7 @@ def get_all_user_accessible_boards(user_id: int) -> Any:
         JSON object
     """
     query: str = """
-        SELECT boards.id, boards.title, boards.is_private
+        SELECT DISTINCT boards.id, boards.title, boards.is_private
         FROM boards
         LEFT JOIN user_boards
         ON user_boards.board_id = boards.id
@@ -130,7 +128,7 @@ def get_user_public_board(user_id: int, board_id: int) -> Any:
     return public_board
 
 
-def post_public_board(title: str, owner_id: int = 0) -> None:
+def post_public_board(title: str, owner_id: int = 0) -> Any:
     """Create new public board.
 
     Parameters
@@ -153,7 +151,7 @@ def post_public_board(title: str, owner_id: int = 0) -> None:
         VALUES (
             %(id)s,
             %(owner_id)s,
-            '{"owner_id"}'
+            '{"owner"}'
         )
         """
     board: Any = data_manager.execute_dml(query_boards, {"title": title}, 'one')
@@ -211,22 +209,23 @@ def delete_board(board_id: int) -> None:
     WHERE board_id = %(board_id)s
     RETURNING status_id"""
 
-    query_statuses: str = """
-    DELETE FROM statuses
-    WHERE id = %(status_id)s"""
-
     query_cards: str = """
     DELETE FROM cards
     WHERE board_id = %(board_id)s
     """
     data_manager.execute_dml(query_cards, {"board_id": board_id})
-    statuses_to_remove: Any = data_manager.execute_dml(query_board_statuses,
-                                                       {"board_id": board_id}, "All")
-    print(statuses_to_remove, file=sys.stderr)
-    for status in statuses_to_remove:
-        data_manager.execute_dml(query_statuses, {"status_id": int(status["status_id"])})
-    data_manager.execute_dml(query_user_boards,
-                             {"board_id": board_id})
+    deleted_statuses = data_manager.execute_dml(query_board_statuses, {"board_id": board_id}, "All")
+    
+    if deleted_statuses:
+        status_ids = tuple(row['status_id'] for row in deleted_statuses)
+        query_cleanup: str = """
+        DELETE FROM statuses
+        WHERE id IN %(status_ids)s
+        AND id NOT IN (SELECT status_id FROM board_statuses)
+        """
+        data_manager.execute_dml(query_cleanup, {"status_ids": status_ids})
+
+    data_manager.execute_dml(query_user_boards, {"board_id": board_id})
     data_manager.execute_dml(query_boards, {"board_id": board_id})
 
 

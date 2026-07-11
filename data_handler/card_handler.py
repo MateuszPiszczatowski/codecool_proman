@@ -3,7 +3,6 @@
     Queries regarding
 """
 from typing import Any
-from functools import reduce
 import data_manager
 
 
@@ -134,30 +133,44 @@ def delete_card(card_id: int) -> None:
 
 
 def patch_card(card_id: int, data: dict[str, Any]) -> None:
-    query: str = """
+    allowed_keys = {'title', 'body'}
+    update_data = {k: v for k, v in data.items() if k in allowed_keys}
+    
+    if not update_data:
+        return
+        
+    set_clause = ", ".join([f"{k} = %({k})s" for k in update_data.keys()])
+    
+    query: str = f"""
         UPDATE cards 
-        SET title = %(title)s,
-            body = %(body)s
+        SET {set_clause}
         WHERE id = %(id)s
     """
-    data.update({"id": card_id})
-    data_manager.execute_dml(query, data)
+    
+    update_data["id"] = card_id
+    data_manager.execute_dml(query, update_data)
 
 
 def patch_card_order(card_id: int, data: dict[str, Any]) -> None:
-
-
-    query: str = """
+    allowed_keys = {'card_order', 'status_id'}
+    update_data = {k: v for k, v in data.items() if k in allowed_keys}
+    
+    if not update_data:
+        return
+        
+    set_clause = ", ".join([f"{k} = %({k})s" for k in update_data.keys()])
+    
+    query: str = f"""
         UPDATE cards
-        SET card_order = %(card_order)s,
-            status_id = %(status_id)s
-        WHERE id = %(card_id)s
+        SET {set_clause}
+        WHERE id = %(id)s
     """
-    data.update({"card_id": card_id})
-    data_manager.execute_dml(query, data)
+    
+    update_data["id"] = card_id
+    data_manager.execute_dml(query, update_data)
 
 
-def post_card(board_id: int, status_id: int, title: str) -> None:
+def post_card(board_id: int, status_id: int, title: str) -> Any:
     query_order: str = """
     SELECT
                 (MAX(card_order) + 1) as card_order

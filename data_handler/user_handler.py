@@ -6,7 +6,7 @@ import datetime
 
 import bcrypt
 from typing import Any
-import data_manager
+from . import connection_manager
 from util import regex_validate
 
 VALIDATION_REGEXS: dict[str] = {'password': r'^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[^a-zA-Z0-9])(?=.{8,}).*$',
@@ -103,7 +103,7 @@ def register_new_user(user: dict[Any]) -> dict[str | bool, str]:
         user['password'] = bcrypt.hashpw(user['password'].encode('UTF-8'), bcrypt.gensalt()).decode()
         user['registration_date'] = datetime.datetime.utcnow()
         try:
-            db_response = data_manager.execute_dml("""
+            db_response = connection_manager.execute_dml("""
             INSERT INTO users (username, first_name, last_name, registration_date, password, email) VALUES (%s, %s, %s, %s, %s, %s)
             RETURNING *;""", [user['username'], user['first_name'], user['last_name'], user['registration_date'],
                               user['password'],
@@ -157,7 +157,7 @@ def get_all_users() -> Any:
             registration_date AS registered
         FROM users
         """
-    users: Any = data_manager.execute_select(query)
+    users: Any = connection_manager.execute_select(query)
 
     return users
 
@@ -181,7 +181,7 @@ def get_user(user_id: int) -> Any:
         FROM users
         WHERE id = %(id)s
         """
-    user: Any = data_manager.execute_select(query, {"id": user_id})
+    user: Any = connection_manager.execute_select(query, {"id": user_id})
 
     return user
 
@@ -192,16 +192,48 @@ def get_user_by_username(username: str) -> Any:
     FROM users
     WHERE username = %(username)s
     """
-    user: Any = data_manager.execute_select(query, {"username": username})
+    user: Any = connection_manager.execute_select(query, {"username": username})
 
     return user
 
 
-def check_permission(user: str, board_id: int = 0) -> bool:
-    # if user and board_id > 0:
-    #     return True
-    # return False
-    return True
+def check_permission(username: str, board_id: int = 0) -> bool:
+    """
+    Check if user is allowed to modify or delete the board.
+    Grants permission if the board is public, or if the board
+    is private and the user is its owner.
+
+    Parameters
+    ----------
+    username : str
+        Username of the user attempting the action
+    board_id : int, optional
+        ID of the board to check, by default 0
+
+    Returns
+    -------
+    bool
+        True if user is allowed to modify the board, False otherwise
+    """
+    if board_id <= 0:
+        return False
+
+    query: str = """
+        SELECT EXISTS (
+            SELECT 1
+            FROM boards b
+            LEFT JOIN user_boards ub ON b.id = ub.board_id
+            LEFT JOIN users u ON u.id = ub.user_id
+            WHERE b.id = %(board_id)s
+            AND (b.is_private = FALSE OR u.username = %(username)s)
+        ) AS is_allowed;
+    """
+    
+    result = connection_manager.execute_select(query, {"board_id": board_id, "username": username}, fetchall=False)
+    
+    if result:
+        return result['is_allowed']
+    return False
 
 
 def get_user_by_email(user_email: str) -> Any:
@@ -223,6 +255,6 @@ def get_user_by_email(user_email: str) -> Any:
         FROM users
         WHERE email = %(email)s
         """
-    user: Any = data_manager.execute_select(query, {"email": user_email})
+    user: Any = connection_manager.execute_select(query, {"email": user_email})
 
     return user

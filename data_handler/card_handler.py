@@ -3,7 +3,7 @@
     Queries regarding
 """
 from typing import Any
-import data_manager
+from . import connection_manager
 
 
 def get_all_cards_public_board(board_id: int) -> Any:
@@ -26,8 +26,8 @@ def get_all_cards_public_board(board_id: int) -> Any:
         WHERE c.board_id = %(id)s
         AND b.is_private = FALSE
         """
-    matching_cards: Any = data_manager.execute_select(query,
-                                                      {"id": board_id})
+    matching_cards: Any = connection_manager.execute_select(query,
+                                                            {"id": board_id})
 
     return matching_cards
 
@@ -53,8 +53,8 @@ def get_card_public_board(board_id: int, card_id: int) -> Any:
         AND c.id = %(card_id)s
         AND b.is_private = FALSE
         """
-    matching_card: Any = data_manager.execute_select(query,
-                                                     {"board_id": board_id, "card_id": card_id})
+    matching_card: Any = connection_manager.execute_select(query,
+                                                           {"board_id": board_id, "card_id": card_id})
 
     return matching_card
 
@@ -84,8 +84,8 @@ def get_all_cards_user_public_board(user_id: int, board_id: int) -> Any:
         AND ub.user_id = %(user_id)s
         AND b.id = %(board_id)s
         """
-    matching_cards: Any = data_manager.execute_select(query,
-                                                      {"user_id": user_id, "board_id": board_id})
+    matching_cards: Any = connection_manager.execute_select(query,
+                                                            {"user_id": user_id, "board_id": board_id})
 
     return matching_cards
 
@@ -118,8 +118,8 @@ def get_card_user_public_board(user_id: int, board_id: int, card_id: int) -> Any
         AND b.id = %(board_id)s
         AND c.id = %(card_id)s
         """
-    matching_card: Any = data_manager.execute_select(query,
-                                                     {"user_id": user_id, "board_id": board_id, "card_id": card_id})
+    matching_card: Any = connection_manager.execute_select(query,
+                                                           {"user_id": user_id, "board_id": board_id, "card_id": card_id})
 
     return matching_card
 
@@ -129,7 +129,7 @@ def delete_card(card_id: int) -> None:
         DELETE FROM cards
         WHERE id = %(id)s
     """
-    data_manager.execute_dml(query, {"id": card_id})
+    connection_manager.execute_dml(query, {"id": card_id})
 
 
 def patch_card(card_id: int, data: dict[str, Any]) -> None:
@@ -148,7 +148,7 @@ def patch_card(card_id: int, data: dict[str, Any]) -> None:
     """
     
     update_data["id"] = card_id
-    data_manager.execute_dml(query, update_data)
+    connection_manager.execute_dml(query, update_data)
 
 
 def patch_card_order(card_id: int, data: dict[str, Any]) -> None:
@@ -167,7 +167,7 @@ def patch_card_order(card_id: int, data: dict[str, Any]) -> None:
     """
     
     update_data["id"] = card_id
-    data_manager.execute_dml(query, update_data)
+    connection_manager.execute_dml(query, update_data)
 
 
 def post_card(board_id: int, status_id: int, title: str) -> Any:
@@ -184,7 +184,7 @@ def post_card(board_id: int, status_id: int, title: str) -> Any:
         )
         RETURNING *
         """
-    card_order = data_manager.execute_select(query_order, variables={'board_id': board_id}, fetchall=False)
-    return data_manager.execute_dml(query_cards,
-                                    [board_id, status_id, title,
+    card_order = connection_manager.execute_select(query_order, variables={'board_id': board_id}, fetchall=False)
+    return connection_manager.execute_dml(query_cards,
+                                          [board_id, status_id, title,
                                      card_order['card_order'] if card_order['card_order'] else 1], 'one')

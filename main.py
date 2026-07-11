@@ -12,7 +12,7 @@ import dotenv
 import os
 
 from util import json_response
-import data_handler.main_handler as dh
+import data_handler as dh
 
 dotenv.load_dotenv()
 
@@ -198,7 +198,7 @@ def public_board(board_id: int) -> ResponseReturnValue | None:
         flashed message
     """
     if request.method != "GET":
-        user: str = session.get("username", default='')
+        user: str = session.get("username", '')
         is_allowed: bool = dh.users.check_permission(user, board_id)
         if request.method == "PATCH" and is_allowed:
             data: Any = request.json
@@ -259,7 +259,7 @@ def user_public_board(user_id: int, board_id: int) -> ResponseReturnValue | None
     """
 
     if request.method != "GET":
-        user: str = session.get("username", default='')
+        user: str = session.get("username", '')
         is_allowed: bool = dh.users.check_permission(user, board_id)
         if request.method == "PATCH" and is_allowed:
             data: Any = request.json
@@ -332,7 +332,7 @@ def card_public_board(board_id: int, card_id: int) -> ResponseReturnValue | None
     """
 
     if request.method != "GET":
-        user: str = session.get("username", default='')
+        user: str = session.get("username", '')
         is_allowed: bool = dh.users.check_permission(user, board_id)
         if request.method == "PATCH" and is_allowed:
             data: Any = request.json
@@ -411,7 +411,7 @@ def card_user_public_board(
     """
 
     if request.method != "GET":
-        user: str = session.get("username", default='')
+        user: str = session.get("username", '')
         is_allowed: bool = dh.users.check_permission(user, board_id)
         if request.method == "PATCH" and is_allowed:
             data: Any = request.json
@@ -442,7 +442,7 @@ def statuses_public_board(board_id: int) -> ResponseReturnValue | None:
 def status_public_board(board_id: int, status_id: int
                         ) -> ResponseReturnValue | None:
     if request.method != "GET":
-        user: str = session.get("username", default='')
+        user: str = session.get("username", '')
         is_allowed: bool = dh.users.check_permission(user, board_id)
         if request.method == "PATCH" and is_allowed:
             data: Any = request.json
@@ -474,7 +474,7 @@ def statuses_user_public_board(board_id: int) -> ResponseReturnValue | None:
 def status_user_public_board(board_id: int, status_id: int
                              ) -> ResponseReturnValue | None:
     if request.method != "GET":
-        user: str = session.get("username", default='')
+        user: str = session.get("username", '')
         is_allowed: bool = dh.users.check_permission(user, board_id)
         if request.method == "PATCH" and is_allowed:
             data: Any = request.json

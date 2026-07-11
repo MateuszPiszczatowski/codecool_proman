@@ -3,8 +3,8 @@
     Queries regarding boards.
 """
 from typing import Any
-import data_manager
-import data_handler.main_handler as dh
+from . import connection_manager
+from . import status_handler as sh
 
 
 def get_all_public_boards() -> Any:
@@ -21,7 +21,7 @@ def get_all_public_boards() -> Any:
         FROM boards
         WHERE is_private = FALSE
         """
-    public_boards: Any = data_manager.execute_select(query)
+    public_boards: Any = connection_manager.execute_select(query)
 
     return public_boards
 
@@ -48,7 +48,7 @@ def get_all_user_accessible_boards(user_id: int) -> Any:
         OR (is_private = TRUE AND user_id = %s)
         ORDER BY boards.id
     """
-    return data_manager.execute_select(query, [user_id])
+    return connection_manager.execute_select(query, [user_id])
 
 
 def get_public_board(board_id: int) -> Any:
@@ -70,7 +70,7 @@ def get_public_board(board_id: int) -> Any:
         WHERE id = %(id)s
         AND is_private = FALSE
         """
-    public_board: Any = data_manager.execute_select(query, {"id": board_id}, False)
+    public_board: Any = connection_manager.execute_select(query, {"id": board_id}, False)
 
     return public_board
 
@@ -95,7 +95,7 @@ def get_all_user_public_boards(user_id: int) -> Any:
         WHERE is_private = FALSE
         AND ub.user_id = %(id)s
         """
-    public_boards: Any = data_manager.execute_select(query, {"id": user_id})
+    public_boards: Any = connection_manager.execute_select(query, {"id": user_id})
 
     return public_boards
 
@@ -122,8 +122,8 @@ def get_user_public_board(user_id: int, board_id: int) -> Any:
         AND ub.user_id = %(user_id)s
         AND b.id = %(board_id)s
         """
-    public_board: Any = data_manager.execute_select(query,
-                                                    {"user_id": user_id, "board_id": board_id}, False)
+    public_board: Any = connection_manager.execute_select(query,
+                                                          {"user_id": user_id, "board_id": board_id}, False)
 
     return public_board
 
@@ -154,10 +154,10 @@ def post_public_board(title: str, owner_id: int = 0) -> Any:
             '{"owner"}'
         )
         """
-    board: Any = data_manager.execute_dml(query_boards, {"title": title}, 'one')
+    board: Any = connection_manager.execute_dml(query_boards, {"title": title}, 'one')
     if owner_id > 0:
-        data_manager.execute_dml(query_user_boards, {"id": board['id'], "owner_id": owner_id})
-    dh.status.add_default_statuses(board['id'])
+        connection_manager.execute_dml(query_user_boards, {"id": board['id'], "owner_id": owner_id})
+    sh.add_default_statuses(board['id'])
     return board
 
 
@@ -187,11 +187,11 @@ def post_private_board(title: str, owner_id: int) -> Any | None:
             '{"owner"}'
         )
         """
-    board: Any = data_manager.execute_dml(query_boards,
-                                          {"title": title}, 'one')
-    data_manager.execute_dml(query_user_boards,
-                             {"id": board['id'], "owner_id": owner_id})
-    dh.status.add_default_statuses(board['id'])
+    board: Any = connection_manager.execute_dml(query_boards,
+                                                {"title": title}, 'one')
+    connection_manager.execute_dml(query_user_boards,
+                                   {"id": board['id'], "owner_id": owner_id})
+    sh.add_default_statuses(board['id'])
     return board
 
 
@@ -213,8 +213,8 @@ def delete_board(board_id: int) -> None:
     DELETE FROM cards
     WHERE board_id = %(board_id)s
     """
-    data_manager.execute_dml(query_cards, {"board_id": board_id})
-    deleted_statuses = data_manager.execute_dml(query_board_statuses, {"board_id": board_id}, "All")
+    connection_manager.execute_dml(query_cards, {"board_id": board_id})
+    deleted_statuses = connection_manager.execute_dml(query_board_statuses, {"board_id": board_id}, "All")
     
     if deleted_statuses:
         status_ids = tuple(row['status_id'] for row in deleted_statuses)
@@ -223,10 +223,10 @@ def delete_board(board_id: int) -> None:
         WHERE id IN %(status_ids)s
         AND id NOT IN (SELECT status_id FROM board_statuses)
         """
-        data_manager.execute_dml(query_cleanup, {"status_ids": status_ids})
+        connection_manager.execute_dml(query_cleanup, {"status_ids": status_ids})
 
-    data_manager.execute_dml(query_user_boards, {"board_id": board_id})
-    data_manager.execute_dml(query_boards, {"board_id": board_id})
+    connection_manager.execute_dml(query_user_boards, {"board_id": board_id})
+    connection_manager.execute_dml(query_boards, {"board_id": board_id})
 
 
 def patch_board(board_id: int, data: dict[str, Any]) -> None:
@@ -235,4 +235,4 @@ def patch_board(board_id: int, data: dict[str, Any]) -> None:
         SET title = %(title)s, is_private = %(is_private)s
         WHERE id = %(id)s
         """
-    data_manager.execute_dml(query, data)
+    connection_manager.execute_dml(query, data)

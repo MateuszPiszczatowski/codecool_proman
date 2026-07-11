@@ -35,9 +35,9 @@ export let boardsManager = {
                 "click",
                 deleteHandler
             );
-            domManager.addEventListener('#new-board-form', 'submit', addHandler);
-            domManager.addEventListener('#refresh-button', 'click', this.loadBoards);
         }
+        domManager.addEventListener('#new-board-form', 'submit', addHandler);
+        domManager.addEventListener('#refresh-button', 'click', this.loadBoards);
     },
 };
 

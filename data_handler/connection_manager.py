@@ -2,36 +2,35 @@
 # pylint: disable=no-name-in-module, unused-import
 # pyright: reportOptionalContextManager=false, reportOptionalSubscript=false
 import os
-from typing import Any
+from typing import Any, Literal
 from psycopg2._psycopg import connection
 from psycopg2.extras import RealDictCursor, RealDictRow
 import psycopg2
+from psycopg2.pool import SimpleConnectionPool
 
-
-def establish_connection(connection_data: dict[str, Any] | None=None) \
-    -> connection | None:
-    """
-    Create a database connection based on the :connection_data: parameter
-    :connection_data: Connection string attributes
-    :returns: psycopg2.connection
-    """
+_pool: SimpleConnectionPool | None = None
+def _init_pool(connection_data: dict[str, Any] | None=None) -> None:
+    global _pool
     if connection_data is None:
         connection_data = get_connection_data()
     try:
-        # connect_str: str = f'postgresql://{user_name}:{password}@{host}/{database_name}
-        connect_str: str = f"dbname={connection_data['dbname']}\
-            user={connection_data['user']} host={connection_data['host']}\
-            password={connection_data['password']}"
-        conn: connection = psycopg2.connect(connect_str)
-        conn.autocommit = True
+        _pool = SimpleConnectionPool(1, 10, **connection_data)
     except psycopg2.DatabaseError as error:
         print("Cannot connect to database.")
-        print(error)
-    else:
-        return conn
+        raise error
+
+def get_connection(connection_data: dict[str, Any] | None=None) -> connection:
+    """Gets and returns opened connection from the pool."""
+    global _pool
+    if _pool is None:
+        _init_pool(connection_data)
+    assert _pool is not None
+    conn: connection = _pool.getconn()
+    conn.autocommit = True
+    return conn
 
 
-def get_connection_data(db_name: str | None=None) -> dict[str, Any] | None:
+def get_connection_data(db_name: str | None=None) -> dict[str, Any]:
     """
     Give back a properly formatted dictionary based on the
     environment variables values which are started with :MY__PSQL_: prefix
@@ -73,21 +72,21 @@ def execute_select(
     list[RealDictRow] | RealDictRow | None
         list of dictionary like objects or None
     """
-
-    result_set: list[RealDictRow] | RealDictRow | None = []
-    with establish_connection() as conn:
+    conn = get_connection()
+    try:
         with conn.cursor(cursor_factory=RealDictCursor) as cursor:
             cursor.execute(statement, variables)
-            result_set = cursor.fetchall() if fetchall else cursor.fetchone()
-
-    return result_set
+            return cursor.fetchall() if fetchall else cursor.fetchone()
+    finally:
+        assert _pool is not None
+        _pool.putconn(conn)
 
 
 def execute_dml(statement: str,
         variables: dict[str, Any] | list[Any],
-        returning: Any = False)\
-    -> RealDictRow | None:
-    """Execute INSERT sql statement, optionally parameterized.
+        returning: Literal['all', 'one'] | None = None)\
+    -> list[RealDictRow] | RealDictRow | None:
+    """Execute INSERT/UPDATE/DELETE sql statement, optionally parameterized.
 
     Parameters
     ----------
@@ -95,36 +94,29 @@ def execute_dml(statement: str,
         SQL query
     variables : dict[str, Any] | list[Any]
         safe query string formatting key: value pairs
-        >>> execute_dml('INSERT INTO shows (title, score)
-            VALUES (%(title)s, %(score)s)',
-            variables={'title': 'Codecool', 'score': 6.9})
-        >>> execute_dml('DELETE FROM shows \\
-            WHERE title = %(title)s',
-            variables={'title': 'Codenormie'})
-        >>> execute_dml('UPDATE shows SET title = %s, \\
-            genre = %s WHERE id = %s',
-            variables=["How to exit vim?", "horror", 2137])
-    returning : Any, optional
+        >>> execute_dml('INSERT INTO shows (title, score) VALUES(%(title)s, %(score)s)',
+        variables={'title': 'Codecool', 'score': 6.9})
+    returning : Literal['all', 'one'] | None, optional
         if the query has a RETURNING statement,
-        set to "All" for multiple results,
-        set to "One" for single result,
-        by default False = no results
+        set to "all" for multiple results,
+        set to "one" for single result,
+        by default None = no results
 
     Returns
     -------
-    RealDictRow | None
-        dictionary like object or None
+    list[RealDictRow] | RealDictRow | None
+        dictionary like object, list of objects, or None
     """
-
-    result: Any | None = None
-    with establish_connection() as conn:
+    conn = get_connection()
+    try:
         with conn.cursor(cursor_factory=RealDictCursor) as cursor:
             cursor.execute(statement, variables)
-            if returning is False:
-                return result
-            else:
+            if returning is not None:
                 if returning.casefold() == "all":
-                    result = cursor.fetchall()
+                    return cursor.fetchall()
                 elif returning.casefold() == "one":
-                    result = cursor.fetchone()
-    return result
+                    return cursor.fetchone()
+            return None
+    finally:
+        assert _pool is not None
+        _pool.putconn(conn)

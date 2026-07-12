@@ -6,6 +6,7 @@ import datetime
 
 import bcrypt
 from typing import Any
+from psycopg2.extras import RealDictRow
 from . import connection_manager
 from util import regex_validate
 
@@ -33,14 +34,14 @@ def check_if_user_exists(username: str | None = None, email: str | None = None) 
     email_user_id = None
     if username:
         user = get_user_by_username(username)
-        if len(user) == 1:
-            username_user_id = user[0]['id']
+        if user:
+            username_user_id = user['id']
         else:
             return False
     if email:
         user = get_user_by_email(email)
-        if len(user) == 1:
-            email_user_id = user[0]['id']
+        if user:
+            email_user_id = user['id']
         else:
             return False
     if username and email:
@@ -50,7 +51,7 @@ def check_if_user_exists(username: str | None = None, email: str | None = None) 
             return False
     return True
 
-def validate_registration_data(user: dict[Any]) -> dict[str | bool, str]:
+def validate_registration_data(user: dict[str, Any]) -> dict[str, Any]:
     """Check if the provided registration data fulfill registration criteria.
 
     Parameters
@@ -65,11 +66,11 @@ def validate_registration_data(user: dict[Any]) -> dict[str | bool, str]:
     """
     response: dict[str | bool, str] = {'success': True, 'message': ''}
     # Check if user already exists
-    if len(get_user_by_email(user['email'])) != 0:
+    if get_user_by_email(user['email']):
         response['success'] = False
         response['message'] = 'User with given e-mail address already exists!'
     if response['success']:
-        if len(get_user_by_username(user['username'])) != 0:
+        if get_user_by_username(user['username']):
             response['success'] = False
             response['message'] = 'User with given username already exists!'
     # Check if provided data are in proper format
@@ -85,7 +86,7 @@ def validate_registration_data(user: dict[Any]) -> dict[str | bool, str]:
     return response
 
 
-def register_new_user(user: dict[Any]) -> dict[str | bool, str]:
+def register_new_user(user: dict[str, Any]) -> dict[str, Any]:
     """Register new user if provided data is correct.
 
     Parameters
@@ -111,14 +112,14 @@ def register_new_user(user: dict[Any]) -> dict[str | bool, str]:
                                                    'one')
             if db_response is None:
                 response['success'] = False
-                response['message'] = 'An error occured during communication with the database: ' + db_response
+                response['message'] = 'An error occurred during communication with the database.'
         except ValueError:
             response['success'] = False
-            response['message'] = 'An error occured during communication with the database'
+            response['message'] = 'An error occurred during communication with the database'
     return response
 
 
-def validate_login(login_data: dict[str]) -> dict[str]:
+def validate_login(login_data: dict[str, Any]) -> dict[str, Any]:
     """Validate login information.
 
     Parameters
@@ -134,8 +135,7 @@ def validate_login(login_data: dict[str]) -> dict[str]:
     email = login_data['email']
     password = login_data['password'].encode('UTF-8')
     user = get_user_by_email(email)
-    if len(user) > 0:
-        user = user[0]
+    if user:
         if bcrypt.checkpw(password, user['password'].encode()):
             return {'success': True, 'message': f'Successfully logged in as {user["username"]}'}
         else:
@@ -144,7 +144,7 @@ def validate_login(login_data: dict[str]) -> dict[str]:
         return {'success': False, 'message': 'No user with such e-mail address'}
 
 
-def get_all_users() -> Any:
+def get_all_users() -> list[RealDictRow] | None:
     """Gather all users list.
 
     Returns
@@ -157,12 +157,12 @@ def get_all_users() -> Any:
             registration_date AS registered
         FROM users
         """
-    users: Any = connection_manager.execute_select(query)
+    users = connection_manager.execute_select(query)
 
     return users
 
 
-def get_user(user_id: int) -> Any:
+def get_user(user_id: int) -> RealDictRow | None:
     """Gather specified user profile.
 
     Parameters
@@ -181,18 +181,18 @@ def get_user(user_id: int) -> Any:
         FROM users
         WHERE id = %(id)s
         """
-    user: Any = connection_manager.execute_select(query, {"id": user_id})
+    user = connection_manager.execute_select(query, {"id": user_id}, fetchall=False)
 
     return user
 
 
-def get_user_by_username(username: str) -> Any:
+def get_user_by_username(username: str) -> RealDictRow | None:
     query: str = """
     SELECT id, username
     FROM users
     WHERE username = %(username)s
     """
-    user: Any = connection_manager.execute_select(query, {"username": username})
+    user = connection_manager.execute_select(query, {"username": username}, fetchall=False)
 
     return user
 
@@ -236,7 +236,7 @@ def check_permission(username: str, board_id: int = 0) -> bool:
     return False
 
 
-def get_user_by_email(user_email: str) -> Any:
+def get_user_by_email(user_email: str) -> RealDictRow | None:
     """Gather specified user profile.
 
     Parameters
@@ -255,6 +255,6 @@ def get_user_by_email(user_email: str) -> Any:
         FROM users
         WHERE email = %(email)s
         """
-    user: Any = connection_manager.execute_select(query, {"email": user_email})
+    user = connection_manager.execute_select(query, {"email": user_email}, fetchall=False)
 
     return user

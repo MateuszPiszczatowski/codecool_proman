@@ -3,11 +3,14 @@
     Queries regarding boards.
 """
 from typing import Any
+
+from psycopg2.extras import RealDictRow
+
 from . import connection_manager
 from . import status_handler as sh
 
 
-def get_all_public_boards() -> Any:
+def get_all_public_boards() -> list[RealDictRow] | None:
     """Gather all public boards.
 
     Returns
@@ -26,7 +29,7 @@ def get_all_public_boards() -> Any:
     return public_boards
 
 
-def get_all_user_accessible_boards(user_id: int) -> Any:
+def get_all_user_accessible_boards(user_id: int) -> list[RealDictRow] | None:
     """
     Gather all boards that are accessible for specific user
 
@@ -51,7 +54,7 @@ def get_all_user_accessible_boards(user_id: int) -> Any:
     return connection_manager.execute_select(query, [user_id])
 
 
-def get_public_board(board_id: int) -> Any:
+def get_public_board(board_id: int) -> RealDictRow | None:
     """Gather public board with specified id.
 
     Parameters
@@ -75,7 +78,7 @@ def get_public_board(board_id: int) -> Any:
     return public_board
 
 
-def get_all_user_public_boards(user_id: int) -> Any:
+def get_all_user_public_boards(user_id: int) -> list[RealDictRow] | None:
     """Gather all public boards for a specified user.
 
     Parameters
@@ -100,7 +103,7 @@ def get_all_user_public_boards(user_id: int) -> Any:
     return public_boards
 
 
-def get_user_public_board(user_id: int, board_id: int) -> Any:
+def get_user_public_board(user_id: int, board_id: int) -> RealDictRow | None:
     """Gather specified public board for a specified user.
 
     Parameters
@@ -128,7 +131,7 @@ def get_user_public_board(user_id: int, board_id: int) -> Any:
     return public_board
 
 
-def post_public_board(title: str, owner_id: int = 0) -> Any:
+def post_public_board(title: str, owner_id: int = 0) -> RealDictRow | None:
     """Create new public board.
 
     Parameters
@@ -155,13 +158,15 @@ def post_public_board(title: str, owner_id: int = 0) -> Any:
         )
         """
     board: Any = connection_manager.execute_dml(query_boards, {"title": title}, 'one')
-    if owner_id > 0:
+    if not board:
+        return None
+    if owner_id and owner_id > 0:
         connection_manager.execute_dml(query_user_boards, {"id": board['id'], "owner_id": owner_id})
     sh.add_default_statuses(board['id'])
     return board
 
 
-def post_private_board(title: str, owner_id: int) -> Any | None:
+def post_private_board(title: str, owner_id: int) -> RealDictRow | None:
     """Create new private board.
 
     Parameters
@@ -189,6 +194,8 @@ def post_private_board(title: str, owner_id: int) -> Any | None:
         """
     board: Any = connection_manager.execute_dml(query_boards,
                                                 {"title": title}, 'one')
+    if not board:
+        return None
     connection_manager.execute_dml(query_user_boards,
                                    {"id": board['id'], "owner_id": owner_id})
     sh.add_default_statuses(board['id'])
@@ -235,4 +242,5 @@ def patch_board(board_id: int, data: dict[str, Any]) -> None:
         SET title = %(title)s, is_private = %(is_private)s
         WHERE id = %(id)s
         """
-    connection_manager.execute_dml(query, data)
+    variables = {**data, "id": board_id}
+    connection_manager.execute_dml(query, variables)

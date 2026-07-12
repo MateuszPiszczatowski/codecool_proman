@@ -3,10 +3,11 @@
     Queries regarding
 """
 from typing import Any
+from psycopg2.extras import RealDictRow
 from . import connection_manager
 
 
-def get_all_cards_public_board(board_id: int) -> Any:
+def get_all_cards_public_board(board_id: int) -> list[RealDictRow] | None:
     """Gather all cards for a specified board.
 
     Parameters
@@ -15,8 +16,8 @@ def get_all_cards_public_board(board_id: int) -> Any:
 
     Returns
     -------
-    Any
-        JSON object
+    list[RealDictRow] | None
+        list of card dictionaries
     """
 
     query: str = """
@@ -26,23 +27,24 @@ def get_all_cards_public_board(board_id: int) -> Any:
         WHERE c.board_id = %(id)s
         AND b.is_private = FALSE
         """
-    matching_cards: Any = connection_manager.execute_select(query,
+    matching_cards = connection_manager.execute_select(query,
                                                             {"id": board_id})
 
     return matching_cards
 
 
-def get_card_public_board(board_id: int, card_id: int) -> Any:
+def get_card_public_board(board_id: int, card_id: int) -> RealDictRow | None:
     """Gather specified card for a specified board.
 
     Parameters
     ----------
     board_id : int
+    card_id : int
 
     Returns
     -------
-    Any
-        JSON object
+    RealDictRow | None
+        single card dictionary
     """
 
     query: str = """
@@ -53,13 +55,13 @@ def get_card_public_board(board_id: int, card_id: int) -> Any:
         AND c.id = %(card_id)s
         AND b.is_private = FALSE
         """
-    matching_card: Any = connection_manager.execute_select(query,
-                                                           {"board_id": board_id, "card_id": card_id})
+    matching_card = connection_manager.execute_select(query,
+                                                           {"board_id": board_id, "card_id": card_id}, fetchall=False)
 
     return matching_card
 
 
-def get_all_cards_user_public_board(user_id: int, board_id: int) -> Any:
+def get_all_cards_user_public_board(user_id: int, board_id: int) -> list[RealDictRow] | None:
     """Gather all cards for a specified user board.
 
     Parameters
@@ -71,8 +73,8 @@ def get_all_cards_user_public_board(user_id: int, board_id: int) -> Any:
 
     Returns
     -------
-    Any
-        JSON object
+    list[RealDictRow] | None
+        list of card dictionaries
     """
 
     query: str = """
@@ -84,13 +86,13 @@ def get_all_cards_user_public_board(user_id: int, board_id: int) -> Any:
         AND ub.user_id = %(user_id)s
         AND b.id = %(board_id)s
         """
-    matching_cards: Any = connection_manager.execute_select(query,
+    matching_cards = connection_manager.execute_select(query,
                                                             {"user_id": user_id, "board_id": board_id})
 
     return matching_cards
 
 
-def get_card_user_public_board(user_id: int, board_id: int, card_id: int) -> Any:
+def get_card_user_public_board(user_id: int, board_id: int, card_id: int) -> RealDictRow | None:
     """Gather specified card for a specified user board.
 
     Parameters
@@ -104,8 +106,8 @@ def get_card_user_public_board(user_id: int, board_id: int, card_id: int) -> Any
 
     Returns
     -------
-    Any
-        JSON object
+    RealDictRow | None
+        single card dictionary
     """
 
     query: str = """
@@ -118,8 +120,8 @@ def get_card_user_public_board(user_id: int, board_id: int, card_id: int) -> Any
         AND b.id = %(board_id)s
         AND c.id = %(card_id)s
         """
-    matching_card: Any = connection_manager.execute_select(query,
-                                                           {"user_id": user_id, "board_id": board_id, "card_id": card_id})
+    matching_card = connection_manager.execute_select(query,
+                                                           {"user_id": user_id, "board_id": board_id, "card_id": card_id}, fetchall=False)
 
     return matching_card
 
@@ -170,7 +172,7 @@ def patch_card_order(card_id: int, data: dict[str, Any]) -> None:
     connection_manager.execute_dml(query, update_data)
 
 
-def post_card(board_id: int, status_id: int, title: str) -> Any:
+def post_card(board_id: int, status_id: int, title: str) -> RealDictRow | None:
     query_order: str = """
     SELECT
                 (MAX(card_order) + 1) as card_order
@@ -185,6 +187,8 @@ def post_card(board_id: int, status_id: int, title: str) -> Any:
         RETURNING *
         """
     card_order = connection_manager.execute_select(query_order, variables={'board_id': board_id}, fetchall=False)
-    return connection_manager.execute_dml(query_cards,
-                                          [board_id, status_id, title,
-                                     card_order['card_order'] if card_order['card_order'] else 1], 'one')
+    if card_order and card_order.get('card_order') is not None:
+        new_order = card_order['card_order']
+    else:
+        new_order = 1
+    return connection_manager.execute_dml(query_cards, [board_id, status_id, title, new_order], 'one')

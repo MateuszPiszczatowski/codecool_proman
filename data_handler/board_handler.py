@@ -15,8 +15,8 @@ def get_all_public_boards() -> list[RealDictRow] | None:
 
     Returns
     -------
-    Any
-        JSON object
+    list[RealDictRow] | None
+        list of board dictionaries
     """
 
     query: str = """
@@ -24,7 +24,7 @@ def get_all_public_boards() -> list[RealDictRow] | None:
         FROM boards
         WHERE is_private = FALSE
         """
-    public_boards: Any = connection_manager.execute_select(query)
+    public_boards = connection_manager.execute_select(query)
 
     return public_boards
 
@@ -39,8 +39,8 @@ def get_all_user_accessible_boards(user_id: int) -> list[RealDictRow] | None:
 
     Returns
     -------
-    Any
-        JSON object
+    list[RealDictRow] | None
+        list of board dictionaries
     """
     query: str = """
         SELECT DISTINCT boards.id, boards.title, boards.is_private
@@ -63,8 +63,8 @@ def get_public_board(board_id: int) -> RealDictRow | None:
 
     Returns
     -------
-    Any
-        JSON object
+    RealDictRow | None
+        single board dictionary
     """
 
     query: str = """
@@ -73,7 +73,7 @@ def get_public_board(board_id: int) -> RealDictRow | None:
         WHERE id = %(id)s
         AND is_private = FALSE
         """
-    public_board: Any = connection_manager.execute_select(query, {"id": board_id}, False)
+    public_board = connection_manager.execute_select(query, {"id": board_id}, False)
 
     return public_board
 
@@ -87,8 +87,8 @@ def get_all_user_public_boards(user_id: int) -> list[RealDictRow] | None:
 
     Returns
     -------
-    Any
-        JSON object
+    list[RealDictRow] | None
+        list of board dictionaries
     """
 
     query: str = """
@@ -98,7 +98,7 @@ def get_all_user_public_boards(user_id: int) -> list[RealDictRow] | None:
         WHERE is_private = FALSE
         AND ub.user_id = %(id)s
         """
-    public_boards: Any = connection_manager.execute_select(query, {"id": user_id})
+    public_boards = connection_manager.execute_select(query, {"id": user_id})
 
     return public_boards
 
@@ -113,8 +113,8 @@ def get_user_public_board(user_id: int, board_id: int) -> RealDictRow | None:
 
     Returns
     -------
-    Any
-        JSON object
+    RealDictRow | None
+        single board dictionary
     """
 
     query: str = """
@@ -125,7 +125,7 @@ def get_user_public_board(user_id: int, board_id: int) -> RealDictRow | None:
         AND ub.user_id = %(user_id)s
         AND b.id = %(board_id)s
         """
-    public_board: Any = connection_manager.execute_select(query,
+    public_board = connection_manager.execute_select(query,
                                                           {"user_id": user_id, "board_id": board_id}, False)
 
     return public_board
@@ -157,7 +157,7 @@ def post_public_board(title: str, owner_id: int = 0) -> RealDictRow | None:
             '{"owner"}'
         )
         """
-    board: Any = connection_manager.execute_dml(query_boards, {"title": title}, 'one')
+    board = connection_manager.execute_dml(query_boards, {"title": title}, 'one')
     if not board:
         return None
     if owner_id and owner_id > 0:
@@ -192,7 +192,7 @@ def post_private_board(title: str, owner_id: int) -> RealDictRow | None:
             '{"owner"}'
         )
         """
-    board: Any = connection_manager.execute_dml(query_boards,
+    board = connection_manager.execute_dml(query_boards,
                                                 {"title": title}, 'one')
     if not board:
         return None

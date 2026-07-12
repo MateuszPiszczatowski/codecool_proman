@@ -10,7 +10,7 @@ from psycopg2.extras import RealDictRow
 from . import connection_manager
 from util import regex_validate
 
-VALIDATION_REGEXS: dict[str] = {'password': r'^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[^a-zA-Z0-9])(?=.{8,}).*$',
+VALIDATION_REGEXES: dict[str,str] = {'password': r'^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[^a-zA-Z0-9])(?=.{8,}).*$',
                                 'username': r'^[a-zA-Z0-9]{3,}$',
                                 'email': r'^[a-zA-Z0-9\.]+@[a-zA-Z0-9]+\.[a-zA-Z0-9]+$'}
 
@@ -64,7 +64,7 @@ def validate_registration_data(user: dict[str, Any]) -> dict[str, Any]:
     Any
         JSON object
     """
-    response: dict[str | bool, str] = {'success': True, 'message': ''}
+    response: dict[str, Any] = {'success': True, 'message': ''}
     # Check if user already exists
     if get_user_by_email(user['email']):
         response['success'] = False
@@ -75,8 +75,8 @@ def validate_registration_data(user: dict[str, Any]) -> dict[str, Any]:
             response['message'] = 'User with given username already exists!'
     # Check if provided data are in proper format
     if response['success']:
-        for key in VALIDATION_REGEXS:
-            if not regex_validate(VALIDATION_REGEXS[key], user[key]):
+        for key in VALIDATION_REGEXES:
+            if not regex_validate(VALIDATION_REGEXES[key], user[key]):
                 response['success'] = False
                 response['message'] += ('\n' if response['message'] == '' else '') + \
                                        f'Improper {key} value'
@@ -99,7 +99,7 @@ def register_new_user(user: dict[str, Any]) -> dict[str, Any]:
     Any
         JSON object
     """
-    response: dict[str | bool, str] = validate_registration_data(user)
+    response: dict[str, Any] = validate_registration_data(user)
     if response['success']:
         user['password'] = bcrypt.hashpw(user['password'].encode('UTF-8'), bcrypt.gensalt()).decode()
         user['registration_date'] = datetime.datetime.utcnow()

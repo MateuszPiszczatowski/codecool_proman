@@ -221,7 +221,7 @@ def delete_board(board_id: int) -> None:
     WHERE board_id = %(board_id)s
     """
     connection_manager.execute_dml(query_cards, {"board_id": board_id})
-    deleted_statuses = connection_manager.execute_dml(query_board_statuses, {"board_id": board_id}, "All")
+    deleted_statuses = connection_manager.execute_dml(query_board_statuses, {"board_id": board_id}, "all")
     
     if deleted_statuses:
         status_ids = tuple(row['status_id'] for row in deleted_statuses)

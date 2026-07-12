@@ -2,7 +2,7 @@
 # pylint: disable=no-name-in-module, unused-import
 # pyright: reportOptionalContextManager=false, reportOptionalSubscript=false
 import os
-from typing import Any, Literal
+from typing import Any, Literal, overload
 from psycopg2._psycopg import connection
 from psycopg2.extras import RealDictCursor, RealDictRow
 import psycopg2
@@ -47,6 +47,20 @@ def get_connection_data(db_name: str | None=None) -> dict[str, Any]:
         'password': os.environ.get('MY_PSQL_PASSWORD')
     }
 
+@overload
+def execute_select(
+        statement: str,
+        variables: dict[str, Any] | list[Any] | None=None,
+        fetchall: Literal[True]=...)\
+        -> list[RealDictRow] | None: ...
+
+@overload
+def execute_select(
+        statement: str,
+        variables: dict[str, Any] | list[Any] | None=None,
+        fetchall: Literal[False]=...)\
+        -> RealDictRow | None: ...
+
 
 def execute_select(
         statement: str,
@@ -81,6 +95,23 @@ def execute_select(
         assert _pool is not None
         _pool.putconn(conn)
 
+@overload
+def execute_dml(statement: str,
+        variables: dict[str, Any] | list[Any],
+        returning: Literal['all'] = ...)\
+    -> list[RealDictRow] | None: ...
+
+@overload
+def execute_dml(statement: str,
+        variables: dict[str, Any] | list[Any],
+        returning: Literal['one'] = ...)\
+    -> RealDictRow | None: ...
+
+@overload
+def execute_dml(statement: str,
+        variables: dict[str, Any] | list[Any],
+        returning: None = ...)\
+    -> None: ...
 
 def execute_dml(statement: str,
         variables: dict[str, Any] | list[Any],

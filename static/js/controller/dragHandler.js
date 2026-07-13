@@ -29,7 +29,7 @@ export let dragManager = {
             'dragstart': statusDragStart},{
             'dragover': cardDragOver
         }, {'dragstart': cardDragStart}];
-        const ADDERS = [addDraggableCard, addDraggableStatus, addDroppableStatus, addDroppableBoard];
+        const ADDERS = [addDroppableBoard, addDraggableStatus, addDroppableStatus, addDraggableCard];
         ADDERS[TYPES[type]](elem);
         const functionsToAdd = FUNCTIONS[TYPES[type]];
         for (let key in functionsToAdd) {
@@ -54,7 +54,7 @@ function addDroppableBoard(board){
     droppableBoards.push(board);
 }
 
-function cardDragStart(event) {
+function cardDragStart() {
     this.classList.add("card-dragging");
     draggableStatuses.forEach((status) => {
         status.removeEventListener("dragstart", statusDragStart);
@@ -65,7 +65,7 @@ function cardDragStart(event) {
     this.addEventListener("dragend", cardDragEnd);
 }
 
-function cardDragEnd(event) {
+async function cardDragEnd() {
     this.classList.remove("card-dragging");
     draggableStatuses.forEach((status) => {
         status.addEventListener("dragstart", statusDragStart);
@@ -74,18 +74,18 @@ function cardDragEnd(event) {
         board.addEventListener("dragover", statusDragOver);
     });
     this.dataset.statusId = this.parentElement.dataset.statusId;
-    fixOrder(this);
+    await fixOrder(this);
 }
 
-function statusDragStart(event) {
+function statusDragStart() {
     console.log('start status drag');
     this.classList.add("status-dragging");
     this.addEventListener("dragend", statusDragEnd);
 }
 
-function statusDragEnd(event) {
+async function statusDragEnd() {
     this.classList.remove("status-dragging");
-    fixOrder(this);
+    await fixOrder(this);
 }
 
 function statusDragOver(event) {
@@ -98,13 +98,13 @@ function statusDragOver(event) {
     if (
         draggable &&
         droppableBoards.includes(event.target) &&
-        draggable.dataset.boardId == event.target.dataset.boardId
+        draggable.dataset.boardId === event.target.dataset.boardId
     ) {
         const previousSibling = getDragPreviousStatusSibling(
             event.target,
             event.clientX
         );
-        if (previousSibling == null || previousSibling == undefined) {
+        if (!previousSibling) {
             event.target.appendChild(draggable);
         } else {
             event.target.insertBefore(draggable, previousSibling);
@@ -120,13 +120,13 @@ function cardDragOver(event) {
     if (
         draggable &&
         droppableStatuses.includes(event.target) &&
-        draggable.dataset.boardId == event.target.dataset.boardId
+        draggable.dataset.boardId === event.target.dataset.boardId
     ) {
         const previousSibling = getDragPreviousCardSibling(
             event.target,
             event.clientY
         );
-        if (previousSibling == null || previousSibling == undefined) {
+        if (!previousSibling) {
             event.target.appendChild(draggable);
         } else {
             event.target.insertBefore(draggable, previousSibling);
@@ -176,31 +176,32 @@ function getDragPreviousStatusSibling(container, x) {
     ).element;
 }
 
-function fixOrder(element) {
+async function fixOrder(element) {
     const allSiblings = [...element.parentElement.children];
     let i = 1;
-    allSiblings.forEach((element) => {
+    for(let element of allSiblings)
+    {
         if ("statusOrder" in element.dataset) {
-            if (parseInt(element.dataset.statusOrder) != i) {
+            if (parseInt(element.dataset.statusOrder) !== i) {
                 let boardId = element.dataset.boardId;
                 let statusId = element.dataset.statusId;
-                element.dataset.statusOrder = i;
-                dataHandler.updateStatus(boardId, statusId, {
+                element.dataset.statusOrder = `${i}`;
+                await dataHandler.updateStatus(boardId, statusId, {
                     status_order: i,
                 });
             }
         } else if ("cardOrder" in element.dataset) {
-            if (parseInt(element.dataset.cardOrder) != i) {
+            if (parseInt(element.dataset.cardOrder) !== i) {
                 let boardId = element.dataset.boardId;
                 let statusId = element.dataset.statusId;
                 let cardId = element.dataset.cardId;
-                element.dataset.cardOrder = i;
-                dataHandler.updateCard(boardId, cardId, {
+                element.dataset.cardOrder = `${i}`;
+                await dataHandler.updateCard(boardId, cardId, {
                     status_id: statusId,
-                    card_order: i,
+                    card_order: `${i}`,
                 });
             }
         }
         i += 1;
-    });
+    }
 }

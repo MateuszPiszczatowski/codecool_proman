@@ -75,7 +75,7 @@ function cardBuilder(card) {
                         <input type="text" class="board__card-title" value="${card.title}" data-card-id="${card.id}" data-board-id="${card.board_id}" data-status-id="${card.status_id}" data-card-order="${card.order}" data-card-archived="${card.archived}"/>
                         <button class="btn btn-sm button-delete delete-card" data-board-id="${card.board_id}" data-card-id="${card.id}"><i class="fa-solid fa-trash-can"></i></button>
                     </h5>
-                    <textarea class="card-text board__card-text" placeholder="Card description">${card.body}</textarea>
+                    <textarea class="card-text board__card-text" placeholder="Card description" data-card-id="${card.id}" data-board-id="${card.board_id}">${card.body}</textarea>
                 </div>
             </fieldset>`;
 }

@@ -25,6 +25,11 @@ export let cardsManager = {
                     updateHandler
                 );
                 domManager.addEventListener(
+                    `textarea[data-card-id="${card.id}"]`,
+                    "change",
+                    textareaUpdateHandler
+                );
+                domManager.addEventListener(
                     `.button-delete[data-card-id="${card.id}"]`,
                     "click",
                     deleteHandler
@@ -108,6 +113,12 @@ const updateDOMCard = (button, cardDOMNode, addCardResponse) => {
         });
     });
     dragManager.handleNewElement(cardDOMNode,'card');
+    const cardInput = cardDOMNode.querySelector(".board__card-title");
+    cardInput.addEventListener("change", updateHandler);
+    const cardTextarea = cardDOMNode.querySelector(".board__card-text");
+    cardTextarea.dataset.cardId=addCardResponse["card"]["id"];
+    cardTextarea.dataset.boardId=addCardResponse["card"]["board_id"];
+    cardTextarea.addEventListener("change",textareaUpdateHandler);
 };
 
 const addCardToDB = async (card) => {
@@ -142,9 +153,23 @@ async function updateHandler() {
     });
 }
 
+async function textareaUpdateHandler() {
+    const boardId = parseInt(this.dataset.boardId);
+    const cardId = parseInt(this.dataset.cardId);
+    const card = this.closest(".card");
+    const title = card.querySelector(".board__card-title").value;
+    if(!this.value.trim()){
+        return;
+    }
+    await dataHandler.updateCard(boardId, cardId, {
+        title: title,
+        body: this.value,
+    });
+}
+
 export const cardsModal = () => {
     const cardsModalEvent = (e) =>{
-        if (e.target.closest("button") || e.target.tagName === "INPUT)") {
+        if (e.target.closest("button") || e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA") {
             return;
         }
         const card = e.target.closest(".card");

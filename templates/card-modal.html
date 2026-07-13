@@ -1,7 +1,7 @@
 {% extends 'modal-base.html' %}
 {% block modal_id %}card-modal{% endblock %}
 {% block modal_form_id %}{% endblock %}
-{% block modal_title %}<input type="text" value="Mockup title" class="board__card-title" id="card-modal__input">{% endblock %}
+{% block modal_title %}<input type="text" value="Mockup title" class="board__card-title" id="card-modal__input" readonly>{% endblock %}
 {% block modal_body %}
-    <textarea class="board__card-text" id="card-modal__textarea">Mockup text</textarea>
+    <textarea class="board__card-text" id="card-modal__textarea" readonly>Mockup text</textarea>
 {% endblock %}

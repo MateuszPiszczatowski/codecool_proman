@@ -44,28 +44,30 @@ export let statusesManager = {
 };
 
 const handleAddStatus = async (e) => {
-    const boardId = e.currentTarget.dataset["boardId"];
+    const boardId = e.currentTarget.dataset.boardId;
     const inputNode = document.querySelector(
         `input.board__status-input--new[data-board-id="${boardId}"]`
     );
     const newStatusTitle = inputNode.value;
-    if (newStatusTitle !== "") {
-        if (e.type !== "keydown" || e.key === "Enter") {
-            inputNode.value = "";
-            inputNode.toggleAttribute("disabled");
-            const statusObject = await createTemporaryStatus(
-                boardId,
-                newStatusTitle,
-                inputNode.parentNode.parentNode
-            );
-            try {
-                await addStatusToDB(statusObject, newStatusTitle, boardId);
-            } catch (error) {
-                handleAddStatusToDBError(error, statusObject);
-            }
-            inputNode.toggleAttribute("disabled");
-        }
+    if (newStatusTitle.trim() === "") {
+        return;
     }
+    if (e.type === "keydown" && e.key !== "Enter") {
+        return;
+    }
+    inputNode.value = "";
+    inputNode.toggleAttribute("disabled");
+    const statusObject = await createTemporaryStatus(
+        boardId,
+        newStatusTitle,
+        inputNode.parentNode.parentNode
+    );
+    try {
+        await addStatusToDB(statusObject, newStatusTitle, boardId);
+    } catch (error) {
+        handleAddStatusToDBError(error, statusObject);
+    }
+    inputNode.toggleAttribute("disabled");
 };
 
 const handleAddStatusToDBError = (error, statusObject) => {
@@ -104,31 +106,29 @@ const createTemporaryStatus = async (boardId, title, lastElem) => {
     lastElem.insertAdjacentHTML("beforebegin", content);
     const statusObject = {
         renderedInput: document.querySelector(
-            `input[data-status-id=${temporaryStatusID}]`
+            `input[data-status-id="${temporaryStatusID}"]`
         ),
         renderedStatus: document.querySelector(
-            `div[data-status-id=${temporaryStatusID}]`
+            `div[data-status-id="${temporaryStatusID}"]`
         ),
         renderedCardContainer: document.querySelector(
-            `div[data-status-id=${temporaryStatusID}].card-droppable`
+            `div[data-status-id="${temporaryStatusID}"].card-droppable`
         ),
-        renderdDeleteButton: document.querySelector(
-            `button[data-status-id=${temporaryStatusID}].button-delete`
+        renderedDeleteButton: document.querySelector(
+            `button[data-status-id="${temporaryStatusID}"].button-delete`
         ),
     };
     statusObject.renderedInput.toggleAttribute("disabled");
     return statusObject;
 };
 
-function showHideButtonHandler(clickEvent) {
-    const statusId = clickEvent.target.dataset.statusId;
-    cardsManager.loadCards(boardId, statusId);
-}
-
-function updateHandler() {
-    let statusId = parseInt(this.dataset.statusId);
-    let boardId = parseInt(this.dataset.boardId);
-    dataHandler.updateStatus(boardId, statusId, {
+async function updateHandler() {
+    if(!this.value.trim()){
+        return;
+    }
+    const statusId = parseInt(this.dataset.statusId);
+    const boardId = parseInt(this.dataset.boardId);
+    await dataHandler.updateStatus(boardId, statusId, {
         title: this.value,
     });
 }
@@ -138,5 +138,5 @@ async function deleteHandler() {
         parseInt(this.dataset.boardId),
         parseInt(this.dataset.statusId)
     );
-    this.parentElement.parentElement.remove();
+    this.closest('.board__status-column').remove();
 }

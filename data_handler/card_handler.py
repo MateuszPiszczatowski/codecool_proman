@@ -26,6 +26,7 @@ def get_all_cards_public_board(board_id: int) -> list[RealDictRow] | None:
         LEFT JOIN boards AS b ON b.id = c.board_id
         WHERE c.board_id = %(id)s
         AND b.is_private = FALSE
+        ORDER BY c.card_order, c.id
         """
     matching_cards = connection_manager.execute_select(query,
                                                             {"id": board_id})
@@ -85,6 +86,7 @@ def get_all_cards_user_public_board(user_id: int, board_id: int) -> list[RealDic
         WHERE b.is_private = FALSE
         AND ub.user_id = %(user_id)s
         AND b.id = %(board_id)s
+        ORDER BY c.card_order, c.di
         """
     matching_cards = connection_manager.execute_select(query,
                                                             {"user_id": user_id, "board_id": board_id})

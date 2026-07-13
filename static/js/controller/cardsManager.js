@@ -9,7 +9,7 @@ export let cardsManager = {
     loadCards: async function (boardId, statusId) {
         const cards = await dataHandler.getCardsByBoardId(boardId);
         for (let card of cards) {
-            if (card.status_id == statusId && card.board_id == boardId) {
+            if (card.status_id === statusId && card.board_id === boardId) {
                 if (card.body == null) {
                     card.body = "";
                 }
@@ -19,11 +19,6 @@ export let cardsManager = {
                     `.board__card-container[data-board-id="${boardId}"][data-status-id="${statusId}"]`,
                     content
                 );
-                // domManager.addEventListener(
-                //     `.card[data-card-id="${card.id}"]`,
-                //     "click",
-                //     deleteButtonHandler
-                // );
                 domManager.addEventListener(
                     `input[data-card-id="${card.id}"]`,
                     "change",
@@ -67,15 +62,10 @@ export let cardsManager = {
 
 const isBoardOpen = (board) => {
     const accordionBody = board.querySelector(".accordion-collapse");
-    if (accordionBody) {
-        if (accordionBody.classList.contains("show")) {
-            return true;
-        } else {
-            return false;
-        }
-    } else {
+    if (!accordionBody) {
         return false;
     }
+    return accordionBody.classList.contains("show");
 };
 
 const handleClosedBoard = (button) => {
@@ -121,8 +111,7 @@ const updateDOMCard = (button, cardDOMNode, addCardResponse) => {
 };
 
 const addCardToDB = async (card) => {
-    const response = await dataHandler.createNewCard(card);
-    return response;
+    return await dataHandler.createNewCard(card);
 };
 
 const addCardToDOM = (boardId, firstStatus) => {
@@ -141,73 +130,41 @@ const addCardToDOM = (boardId, firstStatus) => {
     return {dom: cardDOMNode, data: card};
 };
 
-const checkIfElementIsCard = (element) => {
-    let result = false;
-    const cardElemsClasses = [
-        "card",
-        "card-body",
-        "card-title",
-        "board__card-title",
-        "board__card-text",
-    ];
-    cardElemsClasses.forEach((className) => {
-        if (element.classList.contains(className)) {
-            result = true;
-        }
-    });
-    return result;
-};
-
-const getWholeCardElement = (element) => {
-    if (element) {
-        if (element.classList.contains("card")) {
-            return element;
-        }
-        if (element.tagName === "body") {
-            return false;
-        }
-        return getWholeCardElement(element.parentElement);
-    } else {
-        return false;
+async function updateHandler() {
+    if(!this.value.trim()){
+        return;
     }
-};
-
-function updateHandler() {
-    let boardId = parseInt(this.dataset.boardId);
-    let cardId = parseInt(this.dataset.cardId);
-    dataHandler.updateCard(boardId, cardId, {
+    const boardId = parseInt(this.dataset.boardId);
+    const cardId = parseInt(this.dataset.cardId);
+    await dataHandler.updateCard(boardId, cardId, {
         title: this.value,
         body: this.parentElement.nextElementSibling.value,
     });
 }
 
 export const cardsModal = () => {
-    const cardsModalEvent = (e) => {
-        const targetElement = e.target;
-        if (checkIfElementIsCard(targetElement)) {
-            const card = getWholeCardElement(targetElement);
-            if (card)
-                if (!card.hasAttribute("disabled")) {
-                    const cardTitle =
-                        card.querySelector(".board__card-title").value;
-                    const cardText =
-                        card.querySelector(".board__card-text").value;
-                    const modalElement = document.querySelector("#card-modal");
-                    document.querySelector("#card-modal__input").value =
-                        cardTitle;
-                    document.querySelector("#card-modal__textarea").value =
-                        cardText;
-                    const myModal = new bootstrap.Modal(modalElement).show();
-                } else {
-                }
-            else {
-                console.log(
-                    "Couldn't get the card for DOM element: ",
-                    targetElement
-                );
+    const cardsModalEvent = (e) =>{
+            const card = e.target.closest(".card");
+            if (!card){
+                console.log("Couldn't get the card for DOM element: ", e.target)
+                return;
             }
-        }
-    };
+            if (card.hasAttribute("disabled")) {
+                return;
+            }
+            const cardTitle =
+                card.querySelector(".board__card-title").value;
+            const cardText =
+                card.querySelector(".board__card-text").value;
+            const modalElement = document.querySelector("#card-modal");
+            document.querySelector("#card-modal__input").value =
+                cardTitle;
+            document.querySelector("#card-modal__textarea").value =
+                cardText;
+            // noinspection JSUnresolvedReference
+            new bootstrap.Modal(modalElement).show();
+
+    }
     const boardsAccordion = document.querySelector("#boardsAccordion");
     boardsAccordion.addEventListener("dblclick", cardsModalEvent);
 };

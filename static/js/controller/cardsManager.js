@@ -144,25 +144,28 @@ async function updateHandler() {
 
 export const cardsModal = () => {
     const cardsModalEvent = (e) =>{
-            const card = e.target.closest(".card");
-            if (!card){
-                console.log("Couldn't get the card for DOM element: ", e.target)
-                return;
-            }
-            if (card.hasAttribute("disabled")) {
-                return;
-            }
-            const cardTitle =
-                card.querySelector(".board__card-title").value;
-            const cardText =
-                card.querySelector(".board__card-text").value;
-            const modalElement = document.querySelector("#card-modal");
-            document.querySelector("#card-modal__input").value =
-                cardTitle;
-            document.querySelector("#card-modal__textarea").value =
-                cardText;
-            // noinspection JSUnresolvedReference
-            new bootstrap.Modal(modalElement).show();
+        if (e.target.closest("button") || e.target.tagName === "INPUT)") {
+            return;
+        }
+        const card = e.target.closest(".card");
+        if (!card){
+            console.log("Couldn't get the card for DOM element: ", e.target)
+            return;
+        }
+        if (card.hasAttribute("disabled")) {
+            return;
+        }
+        const cardTitle =
+            card.querySelector(".board__card-title").value;
+        const cardText =
+            card.querySelector(".board__card-text").value;
+        const modalElement = document.querySelector("#card-modal");
+        document.querySelector("#card-modal__input").value =
+            cardTitle;
+        document.querySelector("#card-modal__textarea").value =
+            cardText;
+        // noinspection JSUnresolvedReference
+        new bootstrap.Modal(modalElement).show();
 
     }
     const boardsAccordion = document.querySelector("#boardsAccordion");

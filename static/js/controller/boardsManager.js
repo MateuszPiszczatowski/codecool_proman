@@ -65,16 +65,19 @@ async function showHideButtonHandler(clickEvent) {
     const boardBody = document.querySelector(
         `.row.board__body[data-board-id="${boardId}"]`
     );
-    if (boardBody.children.length == 0) {
+    if (boardBody.children.length === 0) {
         await statusesManager.loadStatuses(boardId);
         dragManager.initDragElements();
     }
 }
 
 async function updateHandler() {
-    dataHandler.updateBoard({
+    if(!this.value.trim()){
+        return;
+    }
+    await dataHandler.updateBoard({
         title: this.value,
-        is_private: this.dataset.boardPrivate,
+        is_private: this.dataset.boardPrivate === "true",
         id: parseInt(this.dataset.boardId),
     });
 }

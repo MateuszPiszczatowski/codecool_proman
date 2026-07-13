@@ -264,4 +264,7 @@ ALTER TABLE ONLY public.user_boards
     ADD CONSTRAINT fk_user_boards_user_id FOREIGN KEY (user_id) REFERENCES public.users(id);
 
 
-
+SELECT pg_catalog.setval('boards_id_seq', (SELECT MAX(id) FROM boards), true);
+SELECT pg_catalog.setval('statuses_id_seq', (SELECT MAX(id) FROM statuses), true);
+SELECT pg_catalog.setval('cards_id_seq', (SELECT MAX(id) FROM cards), true);
+SELECT pg_catalog.setval('users_id_seq', (SELECT MAX(id) FROM users), true);

@@ -9,7 +9,7 @@ export let cardsManager = {
     loadCards: async function (boardId, statusId) {
         const cards = await dataHandler.getCardsByBoardId(boardId);
         for (let card of cards) {
-            if (card.status_id === statusId && card.board_id === boardId) {
+            if (card.status_id === parseInt(statusId) && card.board_id === parseInt(boardId)) {
                 if (card.body == null) {
                     card.body = "";
                 }

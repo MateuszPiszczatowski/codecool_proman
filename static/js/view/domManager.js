@@ -1,5 +1,5 @@
 export let domManager = {
-    addChild: async (parentIdentifier, childContent) => {
+    addChild: (parentIdentifier, childContent) => {
         const parent = document.querySelector(parentIdentifier);
         if (parent) {
             parent.insertAdjacentHTML("beforeend", childContent);
@@ -9,7 +9,7 @@ export let domManager = {
             );
         }
     },
-    addEventListener: async (parentIdentifier, eventType, eventHandler) => {
+    addEventListener: (parentIdentifier, eventType, eventHandler) => {
         const parent = document.querySelector(parentIdentifier);
         if (parent) {
             parent.addEventListener(eventType, eventHandler);

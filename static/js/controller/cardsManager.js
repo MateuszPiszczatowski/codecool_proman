@@ -9,58 +9,58 @@ export let cardsManager = {
     loadCards: async function (boardId, statusId) {
         const cards = await dataHandler.getCardsByBoardId(boardId);
         for (let card of cards) {
-            if (card.status_id === parseInt(statusId) && card.board_id === parseInt(boardId)) {
-                if (card.body == null) {
-                    card.body = "";
-                }
-                const cardBuilder = htmlFactory(htmlTemplates.card);
-                const content = cardBuilder(card);
-                domManager.addChild(
-                    `.board__card-container[data-board-id="${boardId}"][data-status-id="${statusId}"]`,
-                    content
-                );
-                domManager.addEventListener(
-                    `input[data-card-id="${card.id}"]`,
-                    "change",
-                    updateHandler
-                );
-                domManager.addEventListener(
-                    `textarea[data-card-id="${card.id}"]`,
-                    "change",
-                    textareaUpdateHandler
-                );
-                domManager.addEventListener(
-                    `.button-delete[data-card-id="${card.id}"]`,
-                    "click",
-                    deleteHandler
-                );
-                const inputs = document.querySelectorAll("input");
-                const textareas = document.querySelectorAll("textarea");
-                const fields = [...inputs, ...textareas];
-                fields.forEach((field) => {
-                    field.addEventListener("focus", () => {
-                        field.setSelectionRange(-1, -1);
-                    });
-                });
+            if (card.status_id !== parseInt(statusId, 10) || card.board_id !== parseInt(boardId, 10))
+                continue;
+            if (card.body == null) {
+                card.body = "";
             }
+            const cardBuilder = htmlFactory(htmlTemplates.card);
+            const content = cardBuilder(card);
+            domManager.addChild(
+                `.board__card-container[data-board-id="${boardId}"][data-status-id="${statusId}"]`,
+                content
+            );
+            domManager.addEventListener(
+                `input[data-card-id="${card.id}"]`,
+                "change",
+                updateHandler
+            );
+            domManager.addEventListener(
+                `textarea[data-card-id="${card.id}"]`,
+                "change",
+                textareaUpdateHandler
+            );
+            domManager.addEventListener(
+                `.button-delete[data-card-id="${card.id}"]`,
+                "click",
+                deleteHandler
+            );
+            const inputs = document.querySelectorAll("input");
+            const textareas = document.querySelectorAll("textarea");
+            const fields = [...inputs, ...textareas];
+            fields.forEach((field) => {
+                field.addEventListener("focus", () => {
+                    field.setSelectionRange(-1, -1);
+                });
+            });
         }
     },
     addCardEvent: async (e) => {
         const button = e.currentTarget;
         button.toggleAttribute("disabled");
         const board = button.parentNode.parentNode;
-        if (isBoardOpen(board)) {
-            const boardId = board.querySelector(".board__title-input").dataset
-                .boardId;
-            const firstStatus = board.querySelector(".board__card-container");
-            if (firstStatus) {
-                await addCard(button, boardId, firstStatus);
-            } else {
-                showMessage("There must be at least one status to add a card");
-                button.toggleAttribute("disabled");
-            }
-        } else {
+        if (!isBoardOpen(board)) {
             handleClosedBoard(button);
+            return;
+        }
+        const boardId = board.querySelector(".board__title-input").dataset
+            .boardId;
+        const firstStatus = board.querySelector(".board__card-container");
+        if (firstStatus) {
+            await addCard(button, boardId, firstStatus);
+        } else {
+            showMessage("There must be at least one status to add a card");
+            button.toggleAttribute("disabled");
         }
     },
 };
@@ -145,8 +145,8 @@ async function updateHandler() {
     if(!this.value.trim()){
         return;
     }
-    const boardId = parseInt(this.dataset.boardId);
-    const cardId = parseInt(this.dataset.cardId);
+    const boardId = parseInt(this.dataset.boardId, 10);
+    const cardId = parseInt(this.dataset.cardId, 10);
     await dataHandler.updateCard(boardId, cardId, {
         title: this.value,
         body: this.parentElement.nextElementSibling.value,
@@ -154,8 +154,8 @@ async function updateHandler() {
 }
 
 async function textareaUpdateHandler() {
-    const boardId = parseInt(this.dataset.boardId);
-    const cardId = parseInt(this.dataset.cardId);
+    const boardId = parseInt(this.dataset.boardId, 10);
+    const cardId = parseInt(this.dataset.cardId, 10);
     const card = this.closest(".card");
     const title = card.querySelector(".board__card-title").value;
     if(!this.value.trim()){
@@ -199,8 +199,8 @@ export const cardsModal = () => {
 
 async function deleteHandler() {
     await dataHandler.deleteCard(
-        parseInt(this.dataset.boardId),
-        parseInt(this.dataset.cardId)
+        parseInt(this.dataset.boardId, 10),
+        parseInt(this.dataset.cardId, 10)
     );
-    this.parentElement.parentElement.parentElement.remove();
+    this.closest('.card').remove();
 }

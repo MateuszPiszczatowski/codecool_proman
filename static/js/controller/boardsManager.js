@@ -78,11 +78,11 @@ async function updateHandler() {
     await dataHandler.updateBoard({
         title: this.value,
         is_private: this.dataset.boardPrivate === "true",
-        id: parseInt(this.dataset.boardId),
+        id: parseInt(this.dataset.boardId, 10),
     });
 }
 
 async function deleteHandler() {
-    await dataHandler.deleteBoard(parseInt(this.dataset.boardId));
-    this.parentElement.parentElement.remove();
+    await dataHandler.deleteBoard(parseInt(this.dataset.boardId, 10));
+    this.closest('.board').remove();
 }

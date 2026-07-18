@@ -15,3 +15,7 @@ env/
 # Python cache and temporary files
 __pycache__/
 *.py[cod]
+
+# Sublime text / merge files
+
+*.sublime-*

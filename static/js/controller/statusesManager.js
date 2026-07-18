@@ -3,7 +3,7 @@ import { htmlFactory, htmlTemplates } from "../view/htmlFactory.js";
 import { domManager } from "../view/domManager.js";
 import { cardsManager } from "./cardsManager.js";
 import { showMessage } from "../view/utils.js";
-import { dragManager } from "./dragHandler.js";
+import { dragManager, TYPES } from "./dragHandler.js";
 
 export let statusesManager = {
     loadStatuses: async function (boardId) {
@@ -88,10 +88,10 @@ const addStatusToDB = async (statusObject, newStatusTitle, boardId) => {
     statusObject.renderedStatus
         .querySelector(".button-delete")
         .addEventListener("click", deleteHandler);
-    dragManager.handleNewElement(statusObject.renderedStatus, "statusDrag");
+    dragManager.handleNewElement(statusObject.renderedStatus, TYPES.STATUS_DRAG);
     dragManager.handleNewElement(
         statusObject.renderedCardContainer,
-        "statusDrop"
+        TYPES.STATUS_DROP
     );
 };
 

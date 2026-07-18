@@ -2,7 +2,7 @@ import {dataHandler} from "../data/dataHandler.js";
 import {htmlFactory, htmlTemplates} from "../view/htmlFactory.js";
 import {domManager} from "../view/domManager.js";
 import {showMessage} from "../view/utils.js";
-import {dragManager} from './dragHandler.js';
+import {dragManager, TYPES} from './dragHandler.js';
 
 
 export let cardsManager = {
@@ -112,7 +112,7 @@ const updateDOMCard = (button, cardDOMNode, addCardResponse) => {
             field.setSelectionRange(-1, -1);
         });
     });
-    dragManager.handleNewElement(cardDOMNode,'card');
+    dragManager.handleNewElement(cardDOMNode,TYPES.CARD);
     const cardInput = cardDOMNode.querySelector(".board__card-title");
     cardInput.addEventListener("change", updateHandler);
     const cardTextarea = cardDOMNode.querySelector(".board__card-text");

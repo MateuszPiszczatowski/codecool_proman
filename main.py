@@ -16,11 +16,8 @@ import data_handler as dh
 
 dotenv.load_dotenv()
 
-UPLOAD_FOLDER: str = 'static\\uploads'
-
 mimetypes.add_type('application/javascript', '.js')
 app: Flask = Flask(__name__, static_url_path='/static')
-app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['MAX_CONTENT_LENGTH'] = 1 * 1000 * 1000
 
 app.secret_key = os.environ.get('FLASK_SECRET_KEY')

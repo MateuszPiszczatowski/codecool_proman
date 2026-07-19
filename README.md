@@ -21,12 +21,12 @@ A Trello-inspired project management tool with public/private boards, customizab
 ```
 main.py                          ← Flask routing (typed, NumPy-style docstrings)
 ├── data_handler/
-│   ├── main_handler.py          ← aggregates domain handlers
+│   ├── __init__.py              ← package facade: exposes handlers as dh.boards, dh.cards, ...
 │   ├── board_handler.py         ← board CRUD queries
 │   ├── card_handler.py          ← card CRUD queries
 │   ├── status_handler.py        ← status CRUD queries
-│   └── user_handler.py          ← registration, login, user queries
-├── data_manager.py              ← DB connection layer (parameterized queries)
+│   ├── user_handler.py          ← registration, login, user queries
+│   └── connection_manager.py    ← DB connection layer (pooled, parameterized queries)
 └── static/js/
     ├── data/
     │   └── dataHandler.js       ← REST API client (fetch wrappers)
@@ -41,7 +41,7 @@ main.py                          ← Flask routing (typed, NumPy-style docstring
         └── htmlFactory.js       ← HTML template factory
 ```
 
-**Backend** follows a layered design: routes in `main.py` delegate to domain-specific handlers in `data_handler/`, which use `data_manager.py` as a shared database access layer. All SQL queries use psycopg2 parameterized statements to prevent injection.
+**Backend** follows a layered design: routes in `main.py` delegate to domain-specific handlers in `data_handler/`, which share a single database access layer in `connection_manager.py` (psycopg2 connection pool). The package `__init__.py` acts as a facade, so routes reach the handlers through one import (`import data_handler as dh`, then `dh.boards`, `dh.cards`). All SQL queries use psycopg2 parameterized statements to prevent injection.
 
 **Frontend** is organized in an MVC-like pattern without any framework — `data/` handles API communication, `controller/` manages business logic, and `view/` owns DOM rendering via a template factory.
 

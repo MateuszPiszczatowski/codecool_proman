@@ -75,7 +75,7 @@ users (id, username, email, password[bcrypt], is_admin)
 
 Team project built with [Zachiel](https://github.com/Zachiel) during the Codecool bootcamp, using a professional Git workflow on the CodecoolGlobal organization: feature branches → pull requests → code review → merge. The initial repository contained a starter scaffold provided by Codecool (basic project structure and a few stub functions).
 
-Zachiel focused on backend infrastructure, the core drag-and-drop engine, and visual styling. My contributions:
+Zachiel focused on backend infrastructure, the core drag-and-drop engine, and visual styling. What I worked on:
 
 - **Authentication (full stack)** — server-side registration, login flow, bcrypt password hashing, Flask sessions, form validation with regex, login/registration modals
 - **Board management** — adding public and private boards, frontend fetch integration, automatic default status columns for new boards, private board visibility for owners
@@ -84,7 +84,7 @@ Zachiel focused on backend infrastructure, the core drag-and-drop engine, and vi
 - **Drag-and-drop extensions** — extended `dragHandler` to support dragging newly created cards and statuses (not just pre-loaded ones)
 - **Bug fixes** — logout handling for deleted users, error messages for anonymous board creation, message-box cleanup
 - **HTML foundation** — base layout, accordion structure, modal system (extending a general template)
-- **PR reviews** — acted as reviewer/maintainer for the majority of pull requests
+- **PR reviews** — reviewed and merged pull requests as the repository maintainer
 
 ## Getting Started
 
@@ -147,7 +147,7 @@ Zachiel focused on backend infrastructure, the core drag-and-drop engine, and vi
 
 Projekt zespołowy zrealizowany wspólnie z [Zachiel](https://github.com/Zachiel) podczas bootcampu Codecool, w profesjonalnym workflow Git na organizacji CodecoolGlobal: feature branch → pull request → code review → merge. Repozytorium startowe zawierało szkielet projektu dostarczony przez Codecool (struktura katalogów i kilka stubów funkcji).
 
-Zachiel skupił się na infrastrukturze backendu, silniku drag-and-drop i stylowaniu. Mój wkład:
+Zachiel skupił się na infrastrukturze backendu, silniku drag-and-drop i stylowaniu. Pracowałem głównie nad:
 
 - **Autoryzacja (full stack)** — rejestracja po stronie serwera, logowanie, hashowanie haseł bcrypt, sesje Flask, walidacja formularzy z regex, modale logowania/rejestracji
 - **Zarządzanie tablicami** — dodawanie tablic publicznych i prywatnych, integracja fetch z frontendu, automatyczne kolumny domyślne, widoczność tablic prywatnych tylko dla właściciela
@@ -156,4 +156,4 @@ Zachiel skupił się na infrastrukturze backendu, silniku drag-and-drop i stylow
 - **Rozszerzenie drag-and-drop** — obsługa przeciągania nowo utworzonych kart i statusów
 - **Poprawki błędów** — wylogowanie usuniętych użytkowników, komunikaty przy anonimowym tworzeniu tablic, czyszczenie message-box
 - **Fundament HTML** — layout bazowy, struktura akordeonowa, system modali (rozszerzanie szablonu bazowego)
-- **Recenzje PR** — rola reviewera/maintainera przy większości pull requestów
+- **Recenzje PR** — recenzowanie i scalanie pull requestów jako maintainer repozytorium

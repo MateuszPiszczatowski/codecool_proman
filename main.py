@@ -41,7 +41,7 @@ def index() -> str:
     logged_in = False
     if 'username' in session:
         if dh.users.check_if_user_exists(username=session['username']):
-            user = dh.users.get_user_by_username(session['username'])[0]
+            user = dh.users.get_user_by_username(session['username'])
             logged_in = True
         else:
             session.pop('username')
@@ -89,7 +89,7 @@ def login() -> ResponseReturnValue:
     """
     response = dh.users.validate_login(request.json)
     if response['success']:
-        user = dh.users.get_user_by_email(request.json['email'])[0]
+        user = dh.users.get_user_by_email(request.json['email'])
         session['username'] = user['username']
     return response
 
@@ -140,7 +140,7 @@ def public_boards() -> ResponseReturnValue:
             if session.get('username'):
                 if not dh.users.check_if_user_exists(username=session.get('username')):
                     return {'success': False, 'message': f"Couldn't find user {session.get('username')}"}
-                user = dh.users.get_user_by_username(session.get('username'))[0]
+                user = dh.users.get_user_by_username(session.get('username'))
                 add_board_result = dh.boards.post_private_board(published_board['title'], user['id'])
                 return {'success': True,
                         'message': f"Successfully added private board {add_board_result['title']} for user {user['username']}"}
@@ -149,7 +149,7 @@ def public_boards() -> ResponseReturnValue:
         else:
             if session.get('username'):
                 if dh.users.check_if_user_exists(username=session.get('username')):
-                    user = dh.users.get_user_by_username(session.get('username'))[0]
+                    user = dh.users.get_user_by_username(session.get('username'))
                     dh.boards.post_public_board(published_board['title'], user['id'])
                     return {'success': True,
                             'message': f"Successfully added public board {published_board['title']} for user {user['username']}"}
@@ -164,7 +164,7 @@ def public_boards() -> ResponseReturnValue:
         username = session.get('username')
         if username is not None:
             if dh.users.check_if_user_exists(username=username):
-                user = dh.users.get_user_by_username(username)[0]
+                user = dh.users.get_user_by_username(username)
                 return dh.boards.get_all_user_accessible_boards(user['id'])
             else:
                 session.pop('username')
